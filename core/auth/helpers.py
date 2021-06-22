@@ -3,9 +3,10 @@ from flask import request
 import jwt
 from jwt.exceptions import InvalidSignatureError
 
-def login_required(f, **kwargs):
+def login_required(f):
     @wraps(f)
     def function(*args, **kwargs):
+        app = kwargs['app']
         db = app.config['DB']
         key = app.config['SECRET']
         if "access_token" in request.cookies:

@@ -8,6 +8,41 @@ from core.extensions import (
 import jwt
 import datetime as d
 from . import auth
+from functools import wraps
+
+
+def login_required(f):
+    @wraps(f)
+    def function(*args, **kwargs):
+        app = current_app
+        db = app.config['DB']
+        key = app.config['SECRET_KEY']
+        if "access_token" in request.headers:
+            token = request.headers['access_token']
+            if token:
+                try:
+                    uid = jwt.decode(token, key)
+                    current_user = db.search_by_hash(
+                        "platform_db", "User",
+                        [uid], get_attributes=["*"]
+                    )[0]
+                except Exception:
+                    return {
+                        "status": "Error",
+                        "message": "Something went wrong while trying to decode token"
+                    }, 401
+                return f(current_user, *args, **kwargs)
+            else:
+                return {
+                    "status": "Error",
+                    "message": "Token not set in headers"
+                }, 401
+        else:
+            return {
+                "status":  "Error",
+                "message": "Token not in headers"
+            }
+    return function
 
 
 @auth.route('/', methods=['POST'])
@@ -40,26 +75,11 @@ def login():
             },
             current_app.config['SECRET_KEY']
         )
-        resp = make_response(
-            {
-                "login":True
-            }, 200
-        )
-        resp.set_cookie(
-            'access_token',
-            value=access_token,
-            httponly=False,
-            samesite='None',
-            secure=False
-        )
-        resp.set_cookie(
-            'refresh_token',
-            value=refresh_token,
-            httponly=False,
-            samesite='None',
-            secure=False
-        )
-        return resp
+        return {
+            "login":True,
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }, 200
     else:
         return {
             "status": "error",
