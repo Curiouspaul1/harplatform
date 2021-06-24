@@ -25,7 +25,7 @@ def register():
         schema, "User", "email",
         data['email'], get_attributes=['*']
     )
-    print(user)
+    # print(user)
     if user == []:
         try:
             new_user = db.insert(
@@ -38,8 +38,8 @@ def register():
                         "password":pw_hash,
                         "profile_photo":data['profile_photo'],
                         "profile_photo_id":data['profile_photo_id'],
-                        "is_moderator":data['is_moderator']
-                    } 
+                        "is_moderator":data['is_moderator'],
+                    }
                 ]
             )
             return {
@@ -56,11 +56,3 @@ def register():
             "status": "Error",
             "message": "User with email already exists"
         }, 401
-
-
-@user.route("/protected")
-@login_required
-def protect(current_user):
-    return { 
-        "status": "Works"
-    }, 200

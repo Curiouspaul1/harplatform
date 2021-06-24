@@ -5,10 +5,13 @@ from flask import (
 from core.extensions import (
     bcrypt, cors
 )
+from jwt.exceptions import *
 import jwt
 import datetime as d
 from . import auth
 from functools import wraps
+
+schema = "platform_db"
 
 
 def login_required(f):
@@ -21,17 +24,22 @@ def login_required(f):
             token = request.headers['access_token']
             if token:
                 try:
-                    uid = jwt.decode(token, key)
+                    uid = jwt.decode(token, key, algorithms="HS256")
                     current_user = db.search_by_hash(
                         "platform_db", "User",
-                        [uid], get_attributes=["*"]
+                        [uid['uid']], get_attributes=["*"]
                     )[0]
-                except Exception:
+                    return f(current_user, *args, **kwargs)
+                except ExpiredSignatureError:
                     return {
                         "status": "Error",
-                        "message": "Something went wrong while trying to decode token"
+                        "message": "Expired token"
                     }, 401
-                return f(current_user, *args, **kwargs)
+                else:
+                    return {
+                        "status": "Error",
+                        "message": "An error occurred while trying to decode token"
+                    }
             else:
                 return {
                     "status": "Error",
@@ -49,6 +57,8 @@ def login_required(f):
 def login():
     db = current_app.config['DB']
     data = request.get_json(force=True)
+    # TODO: Add functionality for username and email 
+    # signup.
     # find user by email or username
     user = db.search_by_value(
         "platform_db", "User",
