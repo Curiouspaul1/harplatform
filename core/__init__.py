@@ -1,6 +1,8 @@
 from flask import Flask
 from config import config
-from .extensions import bcrypt, cors
+from .extensions import (
+    bcrypt, cors, socket
+)
 
 def create_app(config_name):
     # instantiate flask app instance
@@ -12,6 +14,7 @@ def create_app(config_name):
     # add app instance to dependenciess
     bcrypt.init_app(app)
     cors.init_app(app)
+    socket.init_app(app, cors_allowed_origins='*')
     
     # register blueprints
     from .events_api import event

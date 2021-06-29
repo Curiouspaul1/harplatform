@@ -2,4 +2,4 @@ from flask import Blueprint
 
 event = Blueprint('event', __name__)
 
-from . import views
+from . import views, _events

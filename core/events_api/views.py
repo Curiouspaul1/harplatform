@@ -39,7 +39,9 @@ def add_event(current_user):
                         "start_time": data['start_time'],
                         "end_time": data['end_time'],
                         "user_hash": current_user['user_id'],
+                        "category": data['category'],
                         "interaction_stats": [],
+                        "is_live": False,
                         "date_created": dumps(
                             d.datetime.utcnow(),
                             default=date_serializer
@@ -98,9 +100,18 @@ def like(current_user, event_id):
                 "status": "ok",
                 "message": "Liked event successfully"
             }
-        except Exception as e:
-            raise e
+        except Exception:
             return {
                 "status": "Error",
                 "message": "Unable to add like, an error occurred."
             }, 503
+
+
+# @event.route("<event_id>/comment")
+# @login_required
+# def leave_comment(current_user, event_id):
+#     # find event with id
+#     db = current_app.config['DB']
+#     event = db.search_by_hash(
+#         schema, " Event", [event_id], get_attribute=['*']
+#     )

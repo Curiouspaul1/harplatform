@@ -60,38 +60,44 @@ def login():
     # TODO: Add functionality for username and email 
     # signup.
     # find user by email or username
-    user = db.search_by_value(
-        "platform_db", "User",
-        search_attribute="email",
-        search_value=data['email'],
-        get_attributes=['*']
-    )[0]
-    # if user is found compare hashses
-    if bcrypt.check_password_hash(
-        user['password'], data['password']
-    ):
-    # if hashes match generate tokens for the user
-        access_token = jwt.encode(
-            {
-                "uid":user['user_id'],
-                "exp":d.datetime.utcnow() + d.timedelta(minutes=60)
-            },
-            current_app.config['SECRET_KEY']
-        )
-        refresh_token = jwt.encode(
-            {
-                "uid":user['user_id'],
-                "exp":d.datetime.utcnow() + d.timedelta(days=2)
-            },
-            current_app.config['SECRET_KEY']
-        )
-        return {
-            "login":True,
-            "access_token": access_token,
-            "refresh_token": refresh_token
-        }, 200
+    if "email" or "Email" in data.keys():
+        user = db.search_by_value(
+            "platform_db", "User",
+            search_attribute="email",
+            search_value=data['email'],
+            get_attributes=['*']
+        )[0]
+        # if user is found compare hashses
+        if bcrypt.check_password_hash(
+            user['password'], data['password']
+        ):
+        # if hashes match generate tokens for the user
+            access_token = jwt.encode(
+                {
+                    "uid":user['user_id'],
+                    "exp":d.datetime.utcnow() + d.timedelta(minutes=60)
+                },
+                current_app.config['SECRET_KEY']
+            )
+            refresh_token = jwt.encode(
+                {
+                    "uid":user['user_id'],
+                    "exp":d.datetime.utcnow() + d.timedelta(days=2)
+                },
+                current_app.config['SECRET_KEY']
+            )
+            return {
+                "login":True,
+                "access_token": access_token,
+                "refresh_token": refresh_token
+            }, 200
+        else:
+            return {
+                "status": "error",
+                "message": "Incorrect password"
+            }, 401
     else:
         return {
-            "status": "error",
-            "message": "Incorrect password"
+            "status": "Error",
+            "message": "Email field is empty"
         }, 401
